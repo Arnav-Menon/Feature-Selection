@@ -1,11 +1,9 @@
 import numpy as np
 import random
-import math
 
-COLUMN = 1
-NUM_FEATURES = 0
+CLASS_LABELS = 0
 
-current_set_of_features = []
+# current_set_of_features = []
 
 '''
 leave one out cross validation
@@ -16,23 +14,30 @@ def looCV():
     return random.randint(1, 10)
 
 def traverseLatticeTree(data):
+    current_set_of_features = []
     for i in range(1, len(data[0])):
         print(f"On level {i} of the search tree")
         feature_to_add = 0
         best_so_far_accuracy = 0
         for j in range(1, len(data[0])):
-            if j not in  current_set_of_features:
+            if j not in current_set_of_features:
                 print(f"--Considering adding feature {j}")
-                accuracy = looCV(df[:, current_set_of_features])
+                accuracy = leave_one_out_cv(data, current_set_of_features, [j])
 
                 if accuracy > best_so_far_accuracy:
                     best_so_far_accuracy = accuracy
                     feature_to_add = j
         current_set_of_features.append(feature_to_add)
+        # current_set_of_features.sort()
         print(f"On level {i}, feature {feature_to_add} added to current set")
-        print(df[:, current_set_of_features], "\n\n")
+        print("\t\t\t\t\t", current_set_of_features)
+        print("\t\t\t\t\t", accuracy)
+        # print(df[:, current_set_of_features], "\n\n")
 
-def kFoldCV(data, current_set_of_features, feature_to_add):
+# def kFoldCV(data):
+def leave_one_out_cv(data, current_set, feature_add):
+    # the [0] is to get the class labels along with the features
+    data = data[:, [0] + current_set + feature_add]
     number_correctly_identified = 0
     for i in range(len(data)):
         object_to_classify = data[i][1:]
@@ -60,11 +65,12 @@ def kFoldCV(data, current_set_of_features, feature_to_add):
         # print(f"Object {i} is class {class_label}")
         # print(f"\tIt's nearest neighbor is {nearest_neighbor_location} which is in class {nearest_neighbor_label}")
     accuracy = number_correctly_identified / len(data)
+    # print(f"accuracy: {accuracy}")
     return accuracy
 
 if __name__ == "__main__":
 
-    df = np.loadtxt("test_data.txt")
+    df = np.loadtxt("large_96.txt")
 
     NUM_FEATURES = len(df[0]) - 1
 
