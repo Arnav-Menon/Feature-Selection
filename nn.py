@@ -1,25 +1,26 @@
 import numpy as np
 import time
-import random
 
-CLASS_LABELS = 0
-
+# these 2 keep track of the best subset of features and accuracy for that subset at a global level
 best_subset = []
 best_accuracy = 0
 
 def forwardSelection(data):
     current_set_of_features = []
+    # get accuracy on empty set, not necessarily 50%
     accuracy = (leave_one_out_cv(data, current_set_of_features, []))*100
     print(f"Accuracy on {current_set_of_features} is {accuracy:.1f}%")
+    # start going through the tree of possible subsets
     for i in range(1, len(data[0])):
         feature_to_add = 0
         best_so_far_accuracy = 0
+        # loop through features
         for j in range(1, len(data[0])):
+            # only check the feature if it isn't already in our subset
             if j not in current_set_of_features:
-                # maybe change j input to int and cast to list in loo_cv function
+                print(f"--Considering adding feature {j}")
                 accuracy = (leave_one_out_cv(data, current_set_of_features, [j]))*100
-                print(f"\tUsing feature(s) {current_set_of_features + [j]} accuracy is {accuracy:.1f}%")
-
+                # update global and local subsets and accuracies to keep track of new improvement
                 if accuracy > best_so_far_accuracy:
                     global best_accuracy
                     if accuracy > best_accuracy:
@@ -35,18 +36,22 @@ def forwardSelection(data):
 
 def backwardElimination(data):
     current_set_of_features = [i for i in range(1, len(data[0]))]
+    # get accuracy on set of all features
     accuracy = (leave_one_out_cv(data, current_set_of_features, []))*100
     print(f"Accuracy on {current_set_of_features} is {accuracy:.1f}%")
+    # start going through the tree of possible subsets
     for i in range(1, len(data[0])):
         feature_to_remove = 0
         best_so_far_accuracy = 0
+        # loop through features
         for j in range(1, len(data[0])):
+            # only check the feature if it is in our subset, bc we don't want to possible choose a subset with a feature that we've already eliminated
             if j in current_set_of_features:
                 accuracy = (leave_one_out_cv(data, current_set_of_features, j, True))*100
+                # make copy of list and modify that
                 test = current_set_of_features[:]
                 test.remove(j)
-                print(f"\tUsing feature(s) {test} accuracy is {accuracy:.1f}%")
-
+                # update global and local subsets and accuracies to keep track of new improvement
                 if accuracy > best_so_far_accuracy:
                     global best_accuracy
                     if accuracy > best_accuracy:
@@ -59,6 +64,7 @@ def backwardElimination(data):
         current_set_of_features.remove(feature_to_remove)
         print(f"Feature set {current_set_of_features} was best, accuracy is {best_so_far_accuracy:.1f}%")
 
+# be flag is backward eleminiation flag lol, False by default
 def leave_one_out_cv(data, current_set, feature_add, be=False):
     # the [0] is to get the class labels along with the features
     if be:
@@ -70,20 +76,22 @@ def leave_one_out_cv(data, current_set, feature_add, be=False):
         data = data[:, [0] + current_set + feature_add]
 
     number_correctly_identified = 0
+    # loop through all data
     for i in range(len(data)):
         object_to_classify = data[i][1:]
         class_label = data[i][0]
 
         nearest_neighbor_distance = float("inf")
         nearest_neighbor_location = float("inf")
+        # loop through all data
         for j in range(len(data)):
             if j != i:
+                print(f"Ask if {i} is nearest neighbor with {j}")
                 distance = np.sqrt(np.sum(np.square((object_to_classify - data[j][1:]))))
                 if distance < nearest_neighbor_distance:
                     nearest_neighbor_distance = distance
                     nearest_neighbor_location = j
                     nearest_neighbor_label = data[nearest_neighbor_location][0]
-        
         if class_label == nearest_neighbor_label:
             number_correctly_identified += 1
 
@@ -100,17 +108,13 @@ if __name__ == "__main__":
 
     print(f"This dataset has {len(df[0] )- 1} features, not including class attributes, with {len(df)} instances\n")
 
-    # normalized_vector = df / np.linalg.norm(df)
-    # normalized_vector1 = df[1:] / np.linalg.norm(df)
-
     if algo == 1:
         print("Beginning forward search.")
         forwardSelection(df)
-        # figure out accuracy decimal point stuff here
-        print(f"Finished forward search! The best feature subset is {best_subset}, which has an accuracy of {best_accuracy:.1f}%")
+        print(f"Finished forward search! The best feature subset is {best_subset}, which has an accuracy of {best_accuracy:.1f}%\n")
         print(f"It took {time.time() - start:.1f} seconds.")
     else:
         print("Beginning backward search.")
         backwardElimination(df)
-        print(f"Finished backward search! The best feature subset is {best_subset}, which has an accuracy of {best_accuracy:.1f}%")
+        print(f"Finished backward search! The best feature subset is {best_subset}, which has an accuracy of {best_accuracy:.1f}%\n")
         print(f"It took {time.time() - start:.1f} seconds.")
