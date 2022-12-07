@@ -18,7 +18,6 @@ def forwardSelection(data):
         for j in range(1, len(data[0])):
             # only check the feature if it isn't already in our subset
             if j not in current_set_of_features:
-                print(f"--Considering adding feature {j}")
                 accuracy = (leave_one_out_cv(data, current_set_of_features, [j]))*100
                 # update global and local subsets and accuracies to keep track of new improvement
                 if accuracy > best_so_far_accuracy:
@@ -86,7 +85,6 @@ def leave_one_out_cv(data, current_set, feature_add, be=False):
         # loop through all data
         for j in range(len(data)):
             if j != i:
-                print(f"Ask if {i} is nearest neighbor with {j}")
                 distance = np.sqrt(np.sum(np.square((object_to_classify - data[j][1:]))))
                 if distance < nearest_neighbor_distance:
                     nearest_neighbor_distance = distance
